@@ -1,0 +1,85 @@
+\section{Polynomial Commitments}
+
+References:
+\begin{itemize}
+    \item \cite{AC:KatZavGol10}: KZG polynomial commitment scheme
+    \item \cite{ICALP:BBHR18}: FRI polynomial commitment
+    \item \cite{JC:FenMogNgu24}
+    \item \cite{PKC:Libert24b}: Simulation-Extractable Polynomial commitment scheme from AGM and ROM.
+\end{itemize}
+
+\subsection{Definitions}
+
+\begin{definition}[Polynomial Commitment~\cite{AC:KatZavGol10}]
+    A polynomial commitment scheme consists of four $\ppt$ algorithms $\PCOM = (\Setup, \Com, \Eval, \Ver)$ with the following syntax.
+    \begin{trivlist}
+        \item $\Setup(\secparam,1^\VarNum, 1^\PolyDeg) \to (\ck, \tk):$ Takes a security parameter $\secpar$, a number of variables $\VarNum$ and polynomial degree of $\PolyDeg$ as input, and returns a commitment key $\ck$ and (optionally) a trapdoor key $\tk$.
+        \item $\Com(\ck, f) \to (\com, \open):$ Takes a commitment key $\ck$ and a polynomial $f$ as input, and returns a commitment $\com$ and an opening information $\open$.
+        \item $\Eval(\ck, \com, \open, \Tag, \vec{x}, y) \to \pi \cup \{\bot\}:$ Takes a commitment key $\ck$, a commitment $\com$, an opening information $\open$, (optionally) a tag $\Tag$, an input vector $\vec{x}$ and an output $y$ and input, and returns a proof $\pi$ if $f(\vec{x}) = y$ or a symbol $\bot$ otherwise.
+        \item $\Ver(\ck, \com, \Tag, \vec{x}, y, \pi) \to \bin:$ Takes a commitment key $\ck$, a commitment $\com$, a tag $\Tag$, an input vector $\vec{x}$, an output $y$, and a proof $\pi$ as input, and returns $1$ if the proof is accepted or $0$ otherwise.
+    \end{trivlist}
+    We require the following properties.
+    \begin{trivlist}
+        \item \Prop{Correctness:}
+        \item \Prop{Succinctness:} A polynomial commitment is succinct, if the size of the proof $\pi$ and the commitment $\com$ grows at most logarithmically with the degree $\PolyDeg$ of the committed polynomials.
+        \item \Prop{Binding:}
+        \item \Prop{Knowledge Soundness:}
+        \item \Prop{Hiding:}
+        \item \Prop{Zero-Knowledge:}
+        \item \Prop{Simulation Extractability:}
+    \end{trivlist}
+\end{definition}
+
+\subsection{Constructions}
+
+We give the different constructions of polynomial commitments.
+
+
+\subsubsection{KZG Polynomial Commitment}
+
+We give the $\KZG$~\cite{AC:KatZavGol10} commitment scheme construction. The security of $\PCOM_{\KZG}$ is based on the $q\text{-}\sdh$ assumption in the symmetric pairing setting.
+
+\begin{figure}[ht!]%
+	\centering%
+	\nicoresetlinenr
+	\fbox{%
+		\begin{minipage}[t]{.45\textwidth}
+			\calg{$\Setup(\secparam, 1^\PolyDeg)$}%
+			\begin{nicodemus}
+				\item $( \GG, \GGT, \Ggen, \pdot) \getsr \GGen(\secparam)$
+				\item $\alpha \sample \Unif{\Zq}$
+				\item $\ck \gets (\G{1}, \G{\alpha}, \ldots, \G{\alpha^\PolyDeg})$
+				\item \pcreturn $\ck$
+			\end{nicodemus}
+		\medskip
+			\calg{$\Com(\ck, f)$} 
+			\begin{nicodemus}
+                \item $\com \gets \G{f(\alpha)} \in \GG$
+                \item $\open \gets f$
+                \item \pcreturn $(\com, \open)$
+			\end{nicodemus}
+		\end{minipage}
+		\qquad
+		\begin{minipage}[t]{.45\textwidth}
+            \calg{$\Eval(\ck, \com, \open, x, y)$}
+            \begin{nicodemus}
+                \item \pccheck $\com = \G{f(\alpha)}$
+                \item $h(\PVar) \gets \frac{f(\PVar)-f(x)}{\PVar-x}$
+                \item $\pi \gets \G{h(\PVar)}$
+                \item \pcreturn $\pi$
+            \end{nicodemus}
+        \medskip
+			\calg{$\Ver(\ck, \com, x, y, \pi)$} 
+			\begin{nicodemus}
+				\item \pccheck $\com \pdot \G{1} = \pi \pdot \G{\alpha - x} + \GT{f(x)}$
+			\end{nicodemus}
+		\end{minipage}
+	}%
+	\caption{$\KZG$ polynomial commitment scheme.}
+	\label{const:KZG-commit}
+\end{figure}
+
+
+\subsubsection{FRI Polynomial Commitment}
+
+\subsubsection{}

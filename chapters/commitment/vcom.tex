@@ -1,0 +1,119 @@
+\section{Vector Commitment}
+
+Unavoidable references
+\begin{itemize}
+    \item \cite{TCC:LibYun10}: Concise mercurial vector commitments and independent zero-knowledge sets with short proofs.
+    \item \cite{PKC:CatFio13}: Vector commitments and their applications.
+\end{itemize}
+
+\subsection{Definitions}
+
+
+\begin{definition}[Vector Commitment] A vector commitment scheme consists of four $\ppt$ algorithms $\VCOM = (\Setup, \Com, \Open, \Ver)$ with the following syntax:
+\begin{trivlist}
+    \item $\Setup(\secparam, 1^\MsgDim) \to (\ck, \vk):$ Takes as input the security parameter $\secpar$, and the dimension of the message vector $\MsgDim$ as input, and returns a commitment key $\ck$ and a verification key $\vk$.
+    \item $\Com(\ck, \msg) \to (\com,\open):$ Takes the commitment key $\ck$, and a message $\msg$ as input, and returns a commitment $\com$ and an opening information $\open$.
+    \item $\Open(\ck, \com, \open, i \in [\MsgDim]) \to \pi_i:$ Takes a commitment key $\ck$, a commitment $\com$, an opening information $\open$, a position $i$ as input, and returns a proof $\pi_i$.
+    \item $\Ver(\vk, \com, i, \msg, \pi_i) \to \bin:$ Takes a verification key $\vk$, a commitment $\com$, a position $i$, a message $\msg$ and a proof $\pi_i$ as input, and returns $1$ if the proof is accepted or $0$ otherwise.
+\end{trivlist}
+
+Additionally, we require the following properties
+
+\begin{trivlist}
+    \item \Prop{Correctness:}
+    \item \Prop{Updatability:}
+    \item \Prop{Stateless Updatability:}
+    \item \Prop{Differentially Updatability:}
+    \item \Prop{Position Binding:}
+    \item \Prop{Hiding:} \footnote{In many applications, the hiding property of the vector commitments is not necessary.}
+\end{trivlist}
+\end{definition}
+
+\subsection{Constructions}
+
+\subsubsection{Lattice-based Vector Commitments}
+
+This is the construction proposed by~\cite{TCC:PeiPepSha21}. The vector commitment is secure under the $\sis$ assumption. We use the linearly homomorphic puncturable trapdoor function $(\PTrap)$ as an abstraction of the lattice gadget in~\cite{EC:MicPei12}.
+
+\begin{figure}[ht!]%
+	\centering%
+	\nicoresetlinenr
+	\fbox{%
+		\begin{minipage}[t]{.45\textwidth}%
+            \calg{$\Setup(\secparam, 1^\MsgDim)$}
+			\begin{nicodemus}
+				\item $\Tag_0, \dots, \Tag_\MsgDim \sample \Unif{\TagSp}$
+				\item $(\ek, \tk_{\Tag_\MsgDim}) \getsr \PTrap.\TrapGen(\ek, \tk_{\Tag_\MsgDim})$
+				\item $y_0, \ldots, y_{\MsgDim-1} \sample \Unif{\OutSet}$
+				\item \pcfor $i \in [\MsgDim]: x_{i,i} = 0$
+				\item \pcfor $i, j \in [\MsgDim] \land i \neq j$
+				\item \tab $x_{i,j} \getsr \PTrap.\SamplePre(\ek, \tk_{\Tag_\MsgDim}, \Tag_i, y_j)$
+				\item $\ck \gets (y_0, \ldots, y_{\MsgDim-1}), \{x_{i,j}\}_{i,j \in [\MsgDim]}$
+				\item $\vk \gets (ek, (y_0, \ldots, y_{\MsgDim-1}))$
+				\item \pcreturn $(\ck, \vk)$
+			\end{nicodemus}
+
+			
+		\end{minipage}
+		\qquad
+		\begin{minipage}[t]{.45\textwidth}
+			\calg{$\Com(\ck, \msg)$}
+			\begin{nicodemus}
+				\item  $\com \gets \sum_{j \in [\MsgDim]}y_j \msg_j$
+				\item $\open \gets \msg$
+				\item \pcreturn $(\com, \open)$ 
+			\end{nicodemus}
+		\medskip
+			\calg{$\Open(\ck, \com, \open, i)$}
+			\begin{nicodemus}
+				\item $\pi_i \gets \sum_{j \in [\MsgDim]}x_{i,j} \cdot  \msg_{j}$
+				\item \pcreturn $\pi_i$
+			\end{nicodemus}
+		\medskip
+			\calg{$\Ver(\vk, \com, i, \msg, \pi_i)$}
+			\begin{nicodemus}
+				\item \pcreturn  $\BEval{\PTrap.\Eval(\ek, \Tag_i, \pi_i) + y_i\msg_i = \com}$
+			\end{nicodemus}
+		\end{minipage}
+	}%
+	\caption{$\sis$-based vector commitment scheme.}
+	\label{const:lat-vc}
+\end{figure}
+
+\subsubsection{Gadget-based Homomorphic Vector Commitment}
+
+Reference: \cite{C:CMNW24}
+
+This is the variate of  Ajtai commitment scheme~\cite{STOC:Ajtai96} with~\cite{EC:MicPei12} trapdoor.
+
+\begin{figure}[ht!]%
+	\centering%
+	\nicoresetlinenr
+	\fbox{%
+		\begin{minipage}[t]{.45\textwidth}
+			\calg{$\Setup(\secparam, 1^\MsgDim)$}%
+			\begin{nicodemus}
+				\item $\mat{A} \sample \Unif{\Zq^{n \times \MsgDim\log \FOrd}}$
+				\item $\ck \gets \mat{A}$
+				\item \pcreturn $\ck$
+			\end{nicodemus}
+		\medskip
+			\calg{$\Com(\ck, \msg \in \Zq^\MsgDim)$} 
+			\begin{nicodemus}
+				\item 
+			\end{nicodemus}
+		\end{minipage}
+		\qquad
+		\begin{minipage}[t]{.45\textwidth}
+			\coracle{}
+			\begin{nicodemus}
+				\item 
+			\end{nicodemus}
+		\end{minipage}
+	}%
+	\caption{Gadget-based $\sis$ homomorphic commitment.}
+	\label{simple-figure}
+\end{figure}
+
+
+

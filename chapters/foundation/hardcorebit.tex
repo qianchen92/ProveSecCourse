@@ -1,0 +1,12 @@
+\section{Hardcore Bit}~\label{sec:hardcore-bit}
+
+The hardcore bit is introduced by~\cite{STOC:GolLev89}.
+
+\subsection{Definition}
+
+\begin{definition}[Hardcore Bit]
+    Let $f:\InSet \to \OutSet$ be a function. A $(t, \varepsilon)$-hardcore bit is a function $\hb: \InSet \to \bin$ such that for any $\ppt$ adversary $\adv$ with running time $t$, we have
+    \begin{align*}
+        \left|\condprob{\adv(f(\InVar)) = \hb(\InVar)}{\InVar \sample \Unif{\InSet}}\right| &\leq \varepsilon.
+    \end{align*}        
+\end{definition}

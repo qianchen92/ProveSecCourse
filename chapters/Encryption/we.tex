@@ -1,0 +1,114 @@
+\section{Witness Encryption}
+
+There is a strong connection between $\we$ and computational secret sharing for $\NP$~\cite{STOC:GGSW13}.
+
+\heading{Related Works}
+\begin{itemize}
+    \item \cite{STOC:GGSW13} They have introduced the first witness encryption scheme.
+    \begin{itemize}
+        \item First definition of witness encryption.
+        \item Construction of $\pke$, $\ibe$, $\abe$, adaptively-secure $\ibe$ schemes from $\we$.
+        \item Construction of $\we$ from the multi-linear map.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Definition}
+
+We define the witness encryption scheme here. It was firstly proposed in~\cite{STOC:GGSW13} as a concept for building attribute-based encryption schemes ($\abe$).
+
+\begin{definition}
+    A witness encryption scheme for an $\NP$ relation $\Rel \subseteq \bin^{n(\secpar)} \times \bin^{m(\secpar)}$ with a corresponding $\NP$ language $\Lang = \{\statmnt : \exists \wit. (\statmnt,\wit) \in \Rel\}$ consists of three $\ppt$ algorithms $\we = (\KGen, \Enc, \Dec)$ with the following syntax.
+    \begin{trivlist}
+        \item $\KGen(\secparam, \Rel) \to \ek:$
+        \item $\Enc(\ek, \statmnt, \msg) \to \ct:$
+        \item $\Dec(\ek, \ct, \wit) \to \msg:$
+    \end{trivlist}
+    We require the following properties:
+    \begin{trivlist}
+        \item \Prop{Correctness:} For all $\secpar \in \NN$, all $(\statmnt, \wit) \in \Rel$, and all $\msg \in \MsgSp$, we have:
+        \begin{align*}
+            \condprob{\Dec(\ek, \Enc(\ek, \statmnt, \msg)) = \msg}{\ek \getsr \KGen(\secparam, \Rel)} &= 1- \negl.
+        \end{align*}
+        \item \Prop{Security:} For all two-stages $\ppt$ adversary $\adv = (\adv_1, \adv_2)$, we have:
+        \begin{align*}
+            \left|\condprob{b' = b \land \statmnt \notin \Lang}{\begin{array}{l}
+                \ek \getsr \KGen(\secparam, \Rel)\\
+                (\msg_0, \msg_1, \statmnt, \state) \getsr \adv_1(\ek)\\
+                b \getsr \bin\\
+                \ct_b \getsr \Enc(\ek, \statmnt, \msg_b)\\
+                b' \getsr \adv_2(\state, \ct_b)
+            \end{array}}- \frac{1}{2}\right| & = \negl.
+        \end{align*}
+    \end{trivlist}
+\end{definition}
+
+\subsection{Applications}
+
+\subsubsection{$\pke$ from $\we$}
+
+\subsubsection{$\ibe$ from $\we$}
+
+We present here the $\ibe$ construction from $\we$ schemes. We also need an unique signature scheme $\SIG = (\KGen, \Sig, \Ver)$ together with a Goldreich-Levin~\cite{STOC:GolLev89} hardcore bit $\hb$ (\cref{sec:hardcore-bit}).
+
+We can introduce the notion of message-recoverable signature scheme, which means given a signature $\sigma$, it is easy to get a message $\msg$, such that $\SIG.\Ver(\vk, \msg, \sigma) =1$. Note that such scheme can be easily constructed from any signature scheme by appending the message directly after the signature. 
+
+Note that given an unique signature $\sigma$ with message recoverability, the message recover algorithm $\SIG.\MsgRec(\mpk, \sigma) \to \hash(\msg)$ of signature scheme is actually an one-way function. Therefore, we can define the hardcore bit function $\hb$ of the above one-way function as $\hb_{\vec{r}}(\sigma)\gets \vec{r} \cdot \sigma$.
+
+For the witness encryption scheme we define the following two $\NP$ relations.
+\begin{align*}
+    ((\id, \vec{r}), \sigma) \in \Rel_0 & \Leftrightarrow \SIG.\Ver(\mpk, \id,  \sigma) = 1 \land \hb_{\vec{r}}(\sigma) = 0 \\
+    ((\id, \vec{r}), \sigma) \in \Rel_1 & \Leftrightarrow \SIG.\Ver(\mpk, \id,  \sigma) = 1 \land \hb_{\vec{r}}(\sigma) = 1
+\end{align*}
+
+\begin{figure}[ht!]%
+	\centering%
+	\nicoresetlinenr
+	\fbox{%
+		\begin{minipage}[t]{.45\textwidth}
+			\calg{$\Setup(\secparam)$}%
+			\begin{nicodemus}
+				\item $(\vk, \sk) \getsr \SIG.\KGen(\secparam)$
+				\item $\mpk \gets \vk;\; \msk \gets \sk$
+				\item \pcreturn $(\mpk, \msk)$
+			\end{nicodemus}
+		\medskip
+            \calg{$\Enc(\mpk, \id, \msg)$}
+            \begin{nicodemus}
+                \item $\SigDim \gets \log_2|\SIG.\Sigma|$
+                \item $\vec{r} \gets \bin^\SigDim$
+                \item $\pk_0 \getsr \we.\KGen(\secparam, \Rel_0)$
+                \item $\pk_1 \getsr \we.\KGen(\secparam, \Rel_1)$
+                \item $\ct_0 \getsr \we.\Enc(\pk_0, (\id, \vec{r}), \msg)$
+                \item $\ct_1 \getsr \we.\Enc(\pk_1, (\id, \vec{r}), \msg)$
+                \item \pcreturn $\ct = (\id, \vec{r}, \ct_0, \ct_1)$
+            \end{nicodemus}
+		\end{minipage}
+		\qquad
+		\begin{minipage}[t]{.45\textwidth}
+			\calg{$\KGen(\msk, \id)$} 
+			\begin{nicodemus}
+				\item $\sigma \getsr \SIG.\Sig(\sk, \id)$
+			\end{nicodemus}
+        \medskip
+            \calg{$\Dec(\sk_\id, \ct)$}
+            \begin{nicodemus}
+                \item \pcparse $(\id, \vec{r}, \ct_0, \ct_1) =: \ct$
+                \item \pcif $\sigma^\trans \cdot \vec{r} = 0$ \pcthen
+                \item \tab $\msg \gets \we.\Dec(\pk_0, \sigma, \ct_0)$
+                \item \pcelse
+                \item \tab $\msg \gets \we.\Dec(\pk_1, \sigma, \ct_1)$
+                \item \pcreturn $\msg$
+            \end{nicodemus}
+		\end{minipage}
+	}%
+	\caption{Construction of $\ibe$ scheme from $\we$.}
+	\label{const:we2ibe}
+\end{figure}
+
+\Prop{Proof intuitions:} We try to modify the challenge ciphertext such that the $\ct_0$ encrypts $\msg_b$ and $\ct_1$ encrypts $\msg_{1-b}$. If the adversary answers $0$, we will answer that the hardcore bit is $0$, we will answer $1$ otherwise. Note that since our objective if to have the winning probability is non-negligibly far from $\frac{1}{2}$, it does not matter if we guess $b$ to $1-b$.
+
+{\color{red} In the original paper of~\cite{STOC:GGSW13}, the proof is actually wrong here, without knowing the secret signing key, the simulator cannot really determine whether we should change $\ct_0$ or $\ct_1$. On the other hand, if the simulator knows the signing key then the function from $\sigma$ to $\msg$ is no longer an one-way function.}
+
+\subsubsection{$\abe$ from $\we$}
+
+\subsubsection{Adaptively-secure $\ibe$ from $\we$}
