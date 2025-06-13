@@ -51,10 +51,10 @@
 % --- Title, short Title and date go here.
 % --- -----------------------------------------------------------------
 \def\titletext{%				% Put your paper title here
-	Cryptographic primitives
+	Introduction to Provable Security
 }
 \def\runningtitle{%				% Only for llncs = 1. Used for LNCS runningtitle.
-	Cryptographic primitives
+    Introduction to Provable Security  
 }
 
 \date{\today}					% Only for llncs = 0. Leave blank for no date.
@@ -144,7 +144,7 @@
 % --- -----------------------------------------------------------------
 
 \def\contactmail{%
-	mail here
+	chen.qian@sdu.edu.cn
 }
 
 % --- -----------------------------------------------------------------
@@ -203,30 +203,15 @@
 % --- -----------------------------------------------------------------
 % --- Add your content here
 % --- -----------------------------------------------------------------
-\chapter{Lattices}
-\input{chapters/lattices/lattice.tex}
-\chapter{Foundation}
-\input{chapters/foundation/foudation.tex}
-\chapter{Commitment}
-\input{chapters/commitment/commit}
-\chapter{Signature}
-\input{chapters/signature/sig}
-\chapter{Non-Interactive Zero-Knowledge Proof}
-\input{chapters/NIZK/definitions.tex}
-\input{chapters/NIZK/GS.tex}
-\chapter{Encryption schemes}
-\input{chapters/Encryption/encryption.tex}
-\chapter{Open Problems}
-\input{chapters/OpenProb/openProb.tex}
-
+\chapter{Universally Composable Security}
+\input{chapters/UC/def.tex}
 % --- -----------------------------------------------------------------
 % --- Put your bibliography files here
 % --- -----------------------------------------------------------------
 
 \bibliography{%	Please make sure you have no blanks left in here!
 %	first file,second file, ... %
-	cryptobib/abbrev3,cryptobib/crypto% Uncomment this line after adding the cryptobib submodule to use cryptobib.
-	,add
+	cryptobib/abbrev3,cryptobib/crypto,add.bib% Uncomment this line after adding the cryptobib submodule to use cryptobib.
 }
 
 % ------------- Please do not touch this block of code ----------------

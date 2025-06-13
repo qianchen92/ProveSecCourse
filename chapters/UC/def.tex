@@ -1,0 +1,85 @@
+This chapter discusses the $\UC$ framework, a powerful and widely adopted framework for analyzing the security of cryptographic protocols, proposed by Canetti \cite{FOCS:Canetti01,JACM:Canetti20}. The $\UC$ framework provides a formal definition of security that captures the concept of universal composability. A protocol is considered secure under this framework if it remains secure even when composed with other protocols.
+
+\section{Definition of the UC Framework (Simplified Version)}
+Before giving the definition of the $\UC$ framework, we need to introduce some notations.
+
+\subsection{Machines}
+A machine in $\UC$ model is a triple $\Machine = (\ID, \ComSet, \Program)$ where $\ID$ is the machine's identity, $\ComSet$ is the communication set, and $\Program$ is the program of the machine.
+\subsubsection{Identity}
+The identity of a machine is a unique identifier that distinguishes it from other machines. It can be any string or number that is unique within the context of the protocol.
+\subsubsection{Communication}
+Every machine is interacting with other machine through a communication channel with three different types of messages.
+\begin{itemize}
+    \item The $\ucinput$ is a message from the caller machine to the subroutine machine. It is a request for the subroutine to perform some computation or action.
+    \item The $\ucsubOut$ is a message received from the $\ucsub$. Basically, it is a result of a call to the $\ucsub$.
+    \item The $\ucbackdoor$ is a special message coming from the adversary.
+\end{itemize}
+
+In a normal execution, the $\ucenv$ first send $\ucinput$ to some machines of the protocol, then the machines will send $\ucinput$ to its subroutines, and the subroutines will send $\ucsubOut$ back to the machines, and finally the machines will send $\ucsubOut$ back to the $\ucenv$. The $\ucbackdoor$ message is used by the adversary to control the execution of the protocol. The adversary can send $\ucbackdoor$ messages to any machine in the protocol, and these messages can be used to manipulate the behavior of the protocol. 
+\subsubsection{Communication Set}
+The communication set of a machine is the set of all possible machines that it can communicate with. There are two types of entities in the communication set:
+\begin{itemize}
+    \item The $\uccaller$ is the machine that invokes the $\ucsub$. It is the machine that sends the $\ucinput$ message to the $\ucsub$.
+    \item The $\ucsub$ is the machine that is being invoked. It is the machine that receives the $\ucinput$ message from the $\uccaller$ and sends the $\ucsubOut$ message back to the $\uccaller$.
+    \item Moreover, we also define the $\ucsubsid$ as the machine that is invoked by the $\ucsub$. The $\ucsubsid$ is a machine that is called by the $\ucsub$ to perform some computation or action. The $\ucsubsid$ can also send messages back to the $\ucsub$, which will then send the messages back to the $\uccaller$.
+\end{itemize}
+
+We call the machines that interact with the environment $\ucenv$ as the main machines of the protocol. The other machines that are not directly interacting with $\ucenv$ in the execution of the protocol are called internal machines. The internal machines can be either $\ucsub$ or $\ucsubsid$.
+
+\subsection{Protocol}
+A protocol is a set of machines that interact with each other to achieve a common goal. The protocol $\Protocol = (\Machine_1, \ldots, \Machine_\NumMachines)$ is defined by the set of machines that are involved in the protocol. We require that the machines $\Machine_1, \ldots, \Machine_\NumMachines$ satisfy the following requirements:
+\begin{itemize}
+    \item If $\Protocol$ contains a machine $\Machine_i = (\ID_i, \ComSet_i, \Program_i)$ that is a caller of the identity $\ID_j$, namely $(\ucinput, \ID_j) \in \ComSet_i$. Then $(\ucinput, \ID_i)$ must be in the communication set of $\Machine_j$. This can be interpreted as 
+    \begin{align*}
+        \forall \Machine_i, \Machine_j \in \Protocol. (\ucinput, \ID_i) \in \ComSet_j \implies (\ucinput, \ID_j) \in \ComSet_i.
+    \end{align*}
+    \item If $\Protocol$ contains a machine $\Machine_j = (\ID_j, \ComSet_j, \Program_j)$ that is a subroutine of the identity $\ID_i$ (namely $(\ucsub, \ID_j) \in \ComSet_i$), then $(\ucsub, \ID_j)$ must be in the communication set of $\Machine_i$. This can be interpreted as
+    \begin{align*}
+        \forall \Machine_j \in \Protocol. \forall \Machine_i. (\ucsub, \ID_j) \in \ComSet_i \implies (\ucinput, \ID_i) \in \ComSet_j. 
+    \end{align*}
+    If $\ID_i$ is not an identity of any machine in $\Protocol$, we say that $\Machine_j$ is a main machine of $\Protocol$, and $\ID_i$ is an external identity of $\Machine_i$ with respect to $\Protocol$. If machine $\Machine \in \Protocol$ is not a main machine, we say that $\Machine$ is an internal machine of $\Protocol$.
+\end{itemize}
+
+For multi-party protocol with $\NumP$ parties, we can translate it into $\NumP$ main machines, and several other internal machines.
+
+\subsection{Security of the Protocol}
+To formally define the $\UC$ security, we need to introduce the following notions:
+\begin{itemize}
+    \item Execution within an environment
+    \item Protocol emulation
+    \item  Ideal protocol
+\end{itemize}
+
+
+\subsubsection{Protocol execution and emulation}
+When we execute a protocol $\Protocol$, there are three different types of machines involved:
+\begin{itemize}
+    \item Protocol machines $(\Machine_1, \ldots, \Machine_\NumMachines) \in \Protocol$: including all machines involved in the protocol. Their identity are different from $0$ or $1$. The machines of $\Machine_i \in \Protocol$ can provide $\ucbackdoor$ information to the adversary.
+    \item Adversary machine $\ucAdv$: the machine that is trying to break the security of the protocol. The adversary can be any machine that is not part of the protocol, and it can interact with the protocol machines in any way it wants. The adversary has identity $1$, and its communication set allows it to provide inputs to the protocol machines and receive outputs from them. The adversary can also send $\ucbackdoor$ messages to the protocol machines, which can be used to manipulate the behavior of the protocol.
+    \item Environment machine $\ucEnv$: the machine that is responsible for setting up the protocol and interacting with the adversary. The environment can be any machine that is not part of the protocol, and it can interact with the protocol machines and the adversary in any way it wants. $\ucEnv$ has identity $0$, and its communication set allows it to provide inputs to $\ucAdv$ and the main machines of $\Protocol$.
+\end{itemize}
+
+\paragraph{Execution.} The execution of a protocol starts from the environment machine $\ucEnv$ sending an input to the adversary $\ucAdv$. The adversary can send $\ucbackdoor$ messages to the protocol machines, which can be used to manipulate the behavior of the protocol. The execution continues until all machines have finished executing their programs and have sent their outputs back to the environment machine. At the end of the execution, the environment machine receives the outputs from the protocol machines and the adversary, and it returns a special binary output variable $\EXEC_{\Protocol, \ucAdv, \ucEnv}(z)$. We denote by $\EXEC_{\Protocol, \ucAdv, \ucEnv} = \left\{\EXEC_{\Protocol, \ucAdv, \ucEnv}(z)\right\}_{z \in \bin^\star}$. 
+
+\paragraph{Emulation.} We define what we mean by "protocol $\Protocol_0$ emulates protocol $\Protocol_1$". Intuitively, it means for any $\ppt$ adversary $\ucAdv$, there exists a $\ppt$ simulator $\ucSim$ such that for any environment $\ucEnv$, the output of the execution of $\Protocol_0$ with $\ucAdv$ and $\ucEnv$ is indistinguishable from the output of the execution of $\Protocol_1$ with $\ucSim$ and $\ucEnv$. Formally, we say that protocol $\Protocol_0$ emulates protocol $\Protocol_1$ if for any environment machine $\ucEnv$, there exists a simulator machine $\ucSim$ such that:
+
+As mentioned in~\cite{JACM:Canetti20}, both $\ucEnv$ and $\ucAdv$ are malicious. The difference between the $\ucEnv$ and $\ucAdv$ is that, $\ucEnv$ obtain information from the "official channel", and $\ucAdv$ obtain information from the "side effect". Note that the corruption model is not yet presented here. To handle the corruption, we need to add a specific behavior in the protocol machines, which can receive the $\ucbackdoor$ messages from the adversary. The $\ucbackdoor$ messages are used to control the execution of the protocol, and they can be used to manipulate the behavior of the protocol machines. In th corruption setting, the adversary can send $\ucbackdoor = (\varfont{Corrupt}, \Program)$ to the program. Then, the machine suspends the current execution and starts executing the program $\Program$. The program $\Program$ can be any program that is defined by the adversary, and it can be used to manipulate the behavior of the protocol machines. The program $\Program$ can also send messages to the adversary, which can be used by the adversary to obtain information.
+\begin{definition}[UC-emulation, restricted model]
+    Protocol $\Protocol_0$ is said to be $\UC$-emulated by protocol $\Protocol_1$ if
+    \begin{gather*}
+        \forall \ucAdv \in \ppt. \exists \ucSim \in \ppt. \forall \ucEnv \in \ppt. \EXEC_{\Protocol_0, \ucAdv, \ucEnv} \approx \EXEC_{\Protocol_1, \ucSim, \ucEnv}. 
+    \end{gather*}
+\end{definition}
+
+\subsection{Ideal Functionality}
+
+For modeling a task for $\NumIn$ input parties and $\NumOut$, We can model the ideal functionality as a single machine $\ucF$ which interacts with 
+
+\section{UC vs. Simulation-Based Security}
+
+In the simulation-based security model, a similar approach is employed to define an ideal functionality that is assumed to be secure. Subsequently, a simulator is constructed to interact with the ideal functionality.
+
+
+
+
+
